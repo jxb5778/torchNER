@@ -1,0 +1,6 @@
+
+PAD_TOK = '<PAD>'
+UNK_TOK = '<UNK>'
+
+START_TAG = '<START>'
+STOP_TAG = 'STOP'

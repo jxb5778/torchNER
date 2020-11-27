@@ -4,6 +4,7 @@ from api.utils.util import (
     log_sum_exp,
     upsample_tags,
     pad_sequences,
+    transformer_from_pretrained
 )
 
 from api.utils.const import (

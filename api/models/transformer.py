@@ -1,11 +1,16 @@
 
+import torch
 import torch.nn as nn
 from torch.nn.utils import rnn
 
 import bi_lstm_crf as blc
 
+import numpy as np
 
-class BiLSTM_CRF(nn.Module):
+import api.utils as utils
+
+
+class TransformerBiLSTM_CRF(nn.Module):
     """
         Credit
         - pytorch advanced tutorial: https://pytorch.org/tutorials/beginner/nlp/advanced_tutorial.html
@@ -13,44 +18,52 @@ class BiLSTM_CRF(nn.Module):
     """
 
     def __init__(self,
-                 vocab_size,
+                 transformer_model: str,
                  tag_to_ix,
                  embedding_dim: int = 32,
                  hidden_dim: int = 256,
                  dropout_ratio: int = 0.5
                  ):
 
-        super(BiLSTM_CRF, self).__init__()
+        super(TransformerBiLSTM_CRF, self).__init__()
 
-        self.embedding_dim = embedding_dim
+        self.tag_to_ix = tag_to_ix
+        self.tagset_size = len(tag_to_ix)
+
         self.hidden_dim = hidden_dim
         self.dropout_ratio = dropout_ratio
 
-        self.tag_to_ix = tag_to_ix
-        self.vocab_size = vocab_size
-        self.tagset_size = len(tag_to_ix)
+        self.embeddings, self.tokenizer = utils.transformer_from_pretrained(transformer_model)
 
-        self.word_embeds = nn.Embedding(vocab_size, embedding_dim)
         self.lstm = nn.LSTM(embedding_dim, hidden_dim // 2, num_layers=1, bidirectional=True)
+
+        self.dropout = nn.Dropout(dropout_ratio)
 
         self.crf = blc.CRF(hidden_dim, self.tagset_size)
 
     def _get_lstm_features(self, sentences):
 
-        masks = sentences.gt(0)
+        masks = np.array([
+            [tok == utils.PAD_TOK for tok in sent]
+            for sent in sentences
+        ])
 
-        embeds = self.word_embeds(sentences.long())
+        masks = torch.from_numpy(masks)
+
+        sentences = [' '.join(tok for tok in sent) for sent in sentences]
+
+        tok_sentences = self.tokenizer(sentences, return_tensors="pt", padding=True)
+
+        embeds, _ = self.embeddings(**tok_sentences)
 
         seq_length = masks.sum(1)
 
-        sorted_seq_length, perm_idx = seq_length.sort(descending=True)
-        embeds = embeds[perm_idx, :]
+        print("Seq length: ", seq_length)
 
-        pack_sequence = rnn.pack_padded_sequence(embeds, lengths=sorted_seq_length, batch_first=True)
+        pack_sequence = rnn.pack_padded_sequence(embeds, lengths=seq_length, batch_first=True, enforce_sorted=False)
         packed_output, _ = self.lstm(pack_sequence)
         lstm_out, _ = rnn.pad_packed_sequence(packed_output, batch_first=True)
-        _, unperm_idx = perm_idx.sort()
-        lstm_out = lstm_out[unperm_idx, :]
+        lstm_out = self.dropout(lstm_out)
 
         return lstm_out, masks
 
@@ -66,3 +79,4 @@ class BiLSTM_CRF(nn.Module):
         scores, tag_seq = self.crf(lstm_feats, masks)
 
         return scores, tag_seq
+

@@ -40,7 +40,7 @@ class PrepareTransformerData(torch.utils.data.Dataset):
 
     def __init__(self, X=None, y=None):
 
-        self.X = [' '.join(token for token in sentence) for sentence in X]
+        self.X = X
         self.y = y
 
     def __len__(self):

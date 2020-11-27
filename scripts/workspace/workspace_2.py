@@ -29,4 +29,5 @@ train_sent_list = tok(train_sent_list[:5], return_tensors="pt", padding=True)
 
 pt_outputs = emb(**train_sent_list)
 
-print(pt_outputs)
+print(pt_outputs[0])
+print(pt_outputs[1])

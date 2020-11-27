@@ -13,20 +13,18 @@ if __name__ == '__main__':
     )
 
     tag_to_ix = corpus.make_tag_dictionary()
-    word_to_ix = corpus.make_vocab_dictionary()
 
-    tagger = api.models.BiLSTM_CRF(
+    tagger = api.models.TransformerBiLSTM_CRF(
+        transformer_model='dmis-lab/biobert-v1.1',
         hidden_dim=256,
-        embedding_dim=32,
-        vocab_size=len(word_to_ix),
         tag_to_ix=tag_to_ix
     )
 
-    trainer = api.learn.NERTrainer(tagger, corpus)
+    trainer = api.learn.NERTransformerTrainer(tagger, corpus)
 
     trainer.train(
         base_path=f'{DIRECTORY}/log/test/',
         mini_batch_size=32,
-        max_epochs=1,
-        num_workers=2
+        max_epochs=5,
+        num_workers=1
     )

@@ -1,4 +1,5 @@
 
 from api.learn.trainer import (
-    NERTrainer
+    NERTrainer,
+    NERTransformerTrainer
 )

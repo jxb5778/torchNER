@@ -1,4 +1,6 @@
 
+from transformers import AutoTokenizer, AutoModel
+
 import torch
 
 from api.utils import const
@@ -62,3 +64,10 @@ def pad_sequences(sequence_list, pad_tok=const.PAD_TOK):
     padded_seq = [_pad_sequence(seq, max_length, pad_tok) for seq in sequence_list]
 
     return padded_seq
+
+
+def transformer_from_pretrained(model: str):
+    tokenizer = AutoTokenizer.from_pretrained(model)
+    embedding = AutoModel.from_pretrained(model)
+
+    return embedding, tokenizer

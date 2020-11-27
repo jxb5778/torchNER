@@ -10,9 +10,6 @@ from api.data import prepare
 from api.utils import util
 
 
-
-
-
 class NERCorpus:
 
     def __init__(self, train_file: str = None, dev_file: str = None, test_file: str = None):
@@ -66,7 +63,12 @@ class NERCorpus:
 
     def gen_transformer_data_loader(self, sentence_list, tag_list, params):
 
-        prepared_data = prepare.PrepareTensorData(X=sentence_list, y=tag_list)
+        sent_list_padded = util.pad_sequences(sentence_list)
+
+        tag_list_padded = util.pad_sequences(tag_list)
+        enc_tag_list = self._tagger.encode_sequences(tag_list_padded)
+
+        prepared_data = prepare.PrepareTransformerData(X=sent_list_padded, y=enc_tag_list)
         data_loader = torch.utils.data.DataLoader(prepared_data, **params)
 
         return data_loader

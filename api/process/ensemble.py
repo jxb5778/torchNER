@@ -6,7 +6,7 @@ import statistics
 from api.data import io
 
 
-def ensemble_model_results(input_directory: str, outfile: str):
+def ensemble_model_results(input_directory: str, outfile: str, sep: str = ' '):
 
     reader = io.NERPredFileReader()
 
@@ -19,7 +19,7 @@ def ensemble_model_results(input_directory: str, outfile: str):
 
     for file in file_list:
 
-        file_sent_list, file_tag_list, file_pred_list = reader(file, sep=' ')
+        file_sent_list, file_tag_list, file_pred_list = reader(file, sep=sep)
 
         if sent_list is None:
             sent_list = file_sent_list
